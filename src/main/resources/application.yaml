@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: WalletTestTask
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:yandex_bank}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+  liquibase:
+    enabled: true
+    change-log: db/changelog/changelog.yaml
+
+app:
+  shards: ${SHARDS_NUMBER:2}
+  buffer_size: ${BUFFER_SIZE:262144}
+

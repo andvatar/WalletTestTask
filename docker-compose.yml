@@ -1,0 +1,31 @@
+services:
+  walletApp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wallet-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: wallet_db
+      DB_PORT: 5432
+      DB_NAME: wallet
+      #SPRING_DATASOURCE_URL: jdbc:postgresql://wallet_db:5432/wallet
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SHARDS_NUMBER: 4
+      BUFFER_SIZE: 262144
+    depends_on:
+      - db
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql
+    ports:
+      - "5434:5432"
+    container_name: wallet_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wallet
