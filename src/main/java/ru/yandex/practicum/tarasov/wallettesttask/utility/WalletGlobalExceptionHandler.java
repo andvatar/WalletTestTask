@@ -1,4 +1,4 @@
-package ru.yandex.practicum.tarasov.wallettesttask.units;
+package ru.yandex.practicum.tarasov.wallettesttask.utility;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

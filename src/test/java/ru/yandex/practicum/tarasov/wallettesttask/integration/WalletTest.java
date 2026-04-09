@@ -19,7 +19,7 @@ import ru.yandex.practicum.tarasov.wallettesttask.DTO.OperationDto;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.ErrorCode;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.Operations;
 import ru.yandex.practicum.tarasov.wallettesttask.repository.WalletRepository;
-import ru.yandex.practicum.tarasov.wallettesttask.units.WalletException;
+import ru.yandex.practicum.tarasov.wallettesttask.utility.WalletException;
 
 import java.util.UUID;
 

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.tarasov.wallettesttask.disruptor.handler;
 
 import com.lmax.disruptor.EventHandler;
+import jakarta.validation.ConstraintViolationException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -11,7 +12,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import ru.yandex.practicum.tarasov.wallettesttask.disruptor.event.WalletEvent;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.ErrorCode;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.Operations;
-import ru.yandex.practicum.tarasov.wallettesttask.units.WalletException;
+import ru.yandex.practicum.tarasov.wallettesttask.utility.WalletException;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -108,12 +109,12 @@ public class WalletEventProcessor implements EventHandler<WalletEvent> {
                     }
                 });
             }
-            catch (DataAccessException e) {
+            catch (ConstraintViolationException e) {
                 event.getFuture().completeExceptionally(
                         new WalletException(ErrorCode.INSUFFICIENT_BALANCE, event.getWalletId())
                 );
             }
-        catch (Exception e) {
+            catch (Exception e) {
                 event.getFuture().completeExceptionally(e);
             }
         }

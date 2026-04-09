@@ -5,7 +5,7 @@ import ru.yandex.practicum.tarasov.wallettesttask.DTO.BalanceDto;
 import ru.yandex.practicum.tarasov.wallettesttask.DTO.BalanceMapper;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.ErrorCode;
 import ru.yandex.practicum.tarasov.wallettesttask.repository.WalletRepository;
-import ru.yandex.practicum.tarasov.wallettesttask.units.WalletException;
+import ru.yandex.practicum.tarasov.wallettesttask.utility.WalletException;
 
 import java.util.UUID;
 

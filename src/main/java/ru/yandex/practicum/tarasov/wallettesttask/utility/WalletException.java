@@ -1,4 +1,4 @@
-package ru.yandex.practicum.tarasov.wallettesttask.units;
+package ru.yandex.practicum.tarasov.wallettesttask.utility;
 
 import lombok.Getter;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.ErrorCode;
