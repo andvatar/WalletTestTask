@@ -1,0 +1,12 @@
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d0', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d1', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d2', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d3', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d4', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d5', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d6', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d7', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d8', 0);
+insert into wallets (id, amount) values ('2a038459-ab1f-4911-aa30-faecf993a8d9', 0);
+insert into wallets (id, amount) values ('a40e3b60-ffe9-4c2c-8bd4-8c2ac1dd9c03', 1000);
+commit;

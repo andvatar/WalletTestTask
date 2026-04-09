@@ -24,7 +24,7 @@ public class WalletGlobalExceptionHandler {
 
     @ExceptionHandler(WalletException.class)
     public ResponseEntity<ErrorDto> handleWalletExceptions(WalletException exception, Locale locale) {
-        log.error(exception.getMessage(), exception);
+        log.warn(exception.getMessage(), exception);
         return createResponseEntity(exception.getErrorCode(), exception.getArgs(), locale);
     }
 
@@ -43,7 +43,6 @@ public class WalletGlobalExceptionHandler {
     @ExceptionHandler(CompletionException.class)
     public ResponseEntity<ErrorDto> handleCompletionException(Exception exception, Locale locale) {
         Throwable cause = exception.getCause();
-
 
         if(cause instanceof WalletException walletException) {
             return handleWalletExceptions(walletException, locale);

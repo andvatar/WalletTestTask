@@ -47,3 +47,9 @@ databaseChangeLog:
             splitStatements: false
         - dropTable:
             tableName: wallets
+  - changeSet:
+      id: 2
+      author: AndreyTarasov
+      changes:
+        - sqlFile:
+            path: db/wallet_add_constraint.sql

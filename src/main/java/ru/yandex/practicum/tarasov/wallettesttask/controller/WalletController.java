@@ -1,5 +1,6 @@
 package ru.yandex.practicum.tarasov.wallettesttask.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.tarasov.wallettesttask.DTO.BalanceDto;
@@ -23,8 +24,7 @@ public class WalletController {
     }
 
     @PostMapping("/wallet")
-    public CompletableFuture<Void> walletOperation(@RequestBody OperationDto operationDto) {
-        log.info("id = {}", operationDto.walletId().toString());
+    public CompletableFuture<Void> walletOperation(@Valid @RequestBody OperationDto operationDto) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         walletMessageRouter.route(
                 operationDto.walletId(),

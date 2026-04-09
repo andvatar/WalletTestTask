@@ -2,26 +2,36 @@ package ru.yandex.practicum.tarasov.wallettesttask.disruptor.handler;
 
 import com.lmax.disruptor.EventHandler;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import ru.yandex.practicum.tarasov.wallettesttask.disruptor.event.WalletEvent;
-import ru.yandex.practicum.tarasov.wallettesttask.entity.Wallet;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.ErrorCode;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.Operations;
-import ru.yandex.practicum.tarasov.wallettesttask.repository.WalletRepository;
 import ru.yandex.practicum.tarasov.wallettesttask.units.WalletException;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Getter
+@Slf4j
 public class WalletEventProcessor implements EventHandler<WalletEvent> {
     private final List<WalletEvent> walletEvents;
-    private final WalletRepository walletRepository;
     private final int workerNumber;
+    private final TransactionTemplate transactionTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    public WalletEventProcessor(int workerNumber, WalletRepository walletRepository) {
+    public WalletEventProcessor(int workerNumber,
+                                PlatformTransactionManager transactionManager,
+                                JdbcTemplate jdbcTemplate) {
         this.walletEvents = new ArrayList<>();
-        this.walletRepository = walletRepository;
         this.workerNumber = workerNumber;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -30,6 +40,7 @@ public class WalletEventProcessor implements EventHandler<WalletEvent> {
 
         if(endOfBatch) {
             try {
+                log.info("bufferSize: {}", walletEvents.size());
                 processWalletEvents(walletEvents);
             }
             finally {
@@ -40,52 +51,71 @@ public class WalletEventProcessor implements EventHandler<WalletEvent> {
     }
 
     private void processWalletEvents(List<WalletEvent> walletEvents) {
-        Set<UUID> walletIds = walletEvents.stream().map(WalletEvent::getWalletId).collect(Collectors.toSet());
 
-        Map<UUID, Wallet> walletMap = walletRepository
-                .findAllById(walletIds)
-                .stream()
-                .collect(Collectors.toMap(Wallet::getId, wallet -> wallet));
-
-        List<WalletEvent> validEvents = new ArrayList<>();
-
-        for(WalletEvent walletEvent : walletEvents) {
-            if(walletMap.containsKey(walletEvent.getWalletId())) {
-                validEvents.add(walletEvent);
-            }
-            else {
-                walletEvent.getFuture().completeExceptionally(new WalletException(ErrorCode.WALLET_NOT_FOUND, walletEvent.getWalletId()));
-            }
-        }
-
-        Set<Wallet> walletsToSave = new HashSet<>();
-        List<WalletEvent> eventsToSave = new ArrayList<>();
-
-        for(WalletEvent walletEvent : validEvents) {
-            try{
-                Wallet wallet = walletMap.get(walletEvent.getWalletId());
-                if(walletEvent.getOperation().equals(Operations.DEPOSIT))
-                    wallet.setAmount(wallet.getAmount() + walletEvent.getAmount());
-                else {
-                    if(wallet.getAmount() >= walletEvent.getAmount())
-                        wallet.setAmount(wallet.getAmount() - walletEvent.getAmount());
-                    else {
-                        throw new WalletException(ErrorCode.INSUFFICIENT_BALANCE, wallet.getId());
-                    }
-                }
-                walletsToSave.add(wallet);
-                eventsToSave.add(walletEvent);
-            }
-            catch(WalletException e) {
-                walletEvent.getFuture().completeExceptionally(e);
-            }
-        }
-
+        String sql = "UPDATE wallets SET amount = amount + ? WHERE id = ?";
         try {
-            walletRepository.saveAll(walletsToSave);
-            eventsToSave.forEach(walletEvent -> walletEvent.getFuture().complete(null));
-        } catch (Exception e) {
-            eventsToSave.forEach(walletEvent -> walletEvent.getFuture().completeExceptionally(e));
+            transactionTemplate.executeWithoutResult((status) ->
+                    {
+                        int[] results = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+                            @Override
+                            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                                WalletEvent event = walletEvents.get(i);
+                                long change = event.getOperation().equals(Operations.DEPOSIT) ?
+                                        event.getAmount() : -event.getAmount();
+
+                                ps.setLong(1, change);
+                                ps.setObject(2, event.getWalletId());
+                            }
+
+                            @Override
+                            public int getBatchSize() {
+                                return walletEvents.size();
+                            }
+                        });
+                        for (int i = 0; i < results.length; i++) {
+                            if(results[i] == 0) {
+                                walletEvents.get(i).getFuture().completeExceptionally(
+                                        new WalletException(ErrorCode.WALLET_NOT_FOUND, walletEvents.get(i).getWalletId())
+                                );
+                            } else {
+                                walletEvents.get(i).getFuture().complete(null);
+                            }
+                        }
+                    }
+            );
+        } catch (DataAccessException e) {
+            processStream(sql, walletEvents);
+        }
+        catch (Exception e) {
+            walletEvents.forEach(walletEvent -> walletEvent.getFuture().completeExceptionally(e));
+        }
+    }
+
+    private void processStream(String sql, List<WalletEvent> walletEvents) {
+        for (WalletEvent event : walletEvents) {
+            try {
+                transactionTemplate.executeWithoutResult((status) -> {
+                    long change = event.getOperation().equals(Operations.DEPOSIT) ?
+                            event.getAmount() : -event.getAmount();
+                    int result = jdbcTemplate.update(sql,  change, event.getWalletId());
+
+                    if(result == 0) {
+                        event.getFuture().completeExceptionally(
+                                new WalletException(ErrorCode.WALLET_NOT_FOUND, event.getWalletId())
+                        );
+                    } else {
+                        event.getFuture().complete(null);
+                    }
+                });
+            }
+            catch (DataAccessException e) {
+                event.getFuture().completeExceptionally(
+                        new WalletException(ErrorCode.INSUFFICIENT_BALANCE, event.getWalletId())
+                );
+            }
+        catch (Exception e) {
+                event.getFuture().completeExceptionally(e);
+            }
         }
     }
 }

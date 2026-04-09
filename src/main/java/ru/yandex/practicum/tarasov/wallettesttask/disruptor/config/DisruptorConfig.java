@@ -8,10 +8,11 @@ import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import ru.yandex.practicum.tarasov.wallettesttask.disruptor.event.WalletEvent;
 import ru.yandex.practicum.tarasov.wallettesttask.disruptor.event.WalletEventFactory;
 import ru.yandex.practicum.tarasov.wallettesttask.disruptor.handler.WalletEventProcessor;
-import ru.yandex.practicum.tarasov.wallettesttask.repository.WalletRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +26,13 @@ public class DisruptorConfig {
     @Value("${app.buffer_size}")
     private int bufferSize;
 
-    private final WalletRepository walletRepository;
+    private final PlatformTransactionManager transactionManager;
+    private final JdbcTemplate jdbcTemplate;
 
-    public DisruptorConfig(WalletRepository walletRepository) {
-        this.walletRepository = walletRepository;
+    public DisruptorConfig(PlatformTransactionManager transactionManager,
+                           JdbcTemplate jdbcTemplate) {
+        this.transactionManager = transactionManager;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Bean("ringBuffers")
@@ -39,7 +43,7 @@ public class DisruptorConfig {
             ThreadFactory threadFactory = DaemonThreadFactory.INSTANCE;
             WalletEventFactory factory = new WalletEventFactory();
             Disruptor<WalletEvent> disruptor = new Disruptor<>(factory, bufferSize, threadFactory, ProducerType.MULTI, new BlockingWaitStrategy());
-            disruptor.handleEventsWith(new WalletEventProcessor(i, walletRepository));
+            disruptor.handleEventsWith(new WalletEventProcessor(i, transactionManager, jdbcTemplate));
             disruptor.start();
             RingBuffer<WalletEvent> ringBuffer = disruptor.getRingBuffer();
             ringBuffers.add(ringBuffer);
