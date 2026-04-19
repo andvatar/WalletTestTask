@@ -1,9 +1,11 @@
 package ru.yandex.practicum.tarasov.wallettesttask.DTO;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import ru.yandex.practicum.tarasov.wallettesttask.enums.Operations;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public record OperationDto(
@@ -11,8 +13,8 @@ public record OperationDto(
         UUID walletId,
         @NotNull(message = "Operation type must not be empty")
         Operations operationType,
-        @Min(value = 0, message = "Operation amount must be positive")
-        long amount
+        @DecimalMin(value = "0", inclusive = false, message = "Operation amount must be positive")
+        BigDecimal amount
 ) {
 
 }

@@ -11,13 +11,15 @@ services:
       DB_HOST: wallet_db
       DB_PORT: 5432
       DB_NAME: wallet
-      #SPRING_DATASOURCE_URL: jdbc:postgresql://wallet_db:5432/wallet
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       SHARDS_NUMBER: 4
       BUFFER_SIZE: 262144
     depends_on:
       - db
+      - redis
   db:
     image: postgres
     volumes:
@@ -29,3 +31,10 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=wallet
+  redis:
+    image: redis
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6380:6379"
+    container_name: wallet_redis

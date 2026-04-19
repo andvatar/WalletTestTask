@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -21,7 +22,7 @@ public class Wallet {
     private UUID id;
     @DecimalMin(value = "0")
     @Column(name = "amount")
-    private long amount;
+    private BigDecimal amount;
     @Column(name = "currency_code")
     private String currencyCode;
     @Column(name = "created")
