@@ -9,9 +9,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.tarasov.wallettesttask.DTO.BalanceDto;
-import ru.yandex.practicum.tarasov.wallettesttask.DTO.OperationResponseDto;
 
-import java.time.Duration;
 import java.util.*;
 
 @Service

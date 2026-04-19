@@ -1,7 +1,5 @@
 package ru.yandex.practicum.tarasov.wallettesttask.disruptor.service;
 
-import jakarta.validation.ConstraintViolationException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
